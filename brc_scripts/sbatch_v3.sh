@@ -13,7 +13,7 @@
 
 TASK_ID=$((SLURM_ARRAY_TASK_ID-1))
 
-BETAS="1;2;3;4;5"
+BETAS="1;2;3;"
 
 arrBETAS=(${BETAS//;/ })
 
@@ -30,7 +30,12 @@ run_singularity ()
 {
 singularity exec --nv --writable-tmpfs -B /usr/lib64 -B /var/lib/dcv-gl --overlay /global/scratch/users/nakamoto/singularity/overlay-50G-10M-2.ext3:ro /global/scratch/users/nakamoto/singularity/cuda11.5-cudnn8-devel-ubuntu18.04.sif /bin/bash -c "
     source ~/.bashrc
-    conda activate odt
+
+    if [[ $HOSTNAME == n02* ]]; then
+        conda activate odt-2
+    else
+        conda activate odt
+    fi
     cd $PROJECT_DIR
     python main.py \
     --seed=$1 \
@@ -39,7 +44,7 @@ singularity exec --nv --writable-tmpfs -B /usr/lib64 -B /var/lib/dcv-gl --overla
     --env=$2 \
     --embed_dim=1024 \
     --eval_interval=10 \
-    --num_eval_episodes=50 \
+    --num_eval_episodes=20 \
     --eval_context_length=5 \
     --ordering=1 \
     --eval_rtg=1 \
@@ -49,7 +54,9 @@ singularity exec --nv --writable-tmpfs -B /usr/lib64 -B /var/lib/dcv-gl --overla
     --weight_decay=0 \
     --project=$PROJECT_NAME \
     --dataset_path=$dataset_path \
-    --num_workers=4
+    --num_workers=4 \
+    --env_type=dummy
+
 "
 }
 

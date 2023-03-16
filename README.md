@@ -45,3 +45,10 @@ The majority of `online-dt` is licensed under CC-BY-NC, however portions of the 
 * D4RL code, transformers, Lamb - Apache 2.0 License
 * stable-baselines3, Gym, decision-transformer - MIT License
 
+
+## BRC
+somehow does not work on nodes n02xx: RuntimeError: CUDA error: CUBLAS_STATUS_EXECUTION_FAILED when calling `cublasSgemm( handle, opa, opb, m, n, k, &alpha, a, lda, b, ldb, &beta, c, ldc)`
+
+```
+pip3 install torch==1.8.2 torchvision==0.9.2 torchaudio==0.8.2 --extra-index-url https://download.pytorch.org/whl/lts/1.8/cu111
+```
