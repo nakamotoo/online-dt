@@ -30,6 +30,7 @@ run_singularity ()
 {
 singularity exec --nv --writable-tmpfs -B /usr/lib64 -B /var/lib/dcv-gl --overlay /global/scratch/users/nakamoto/singularity/overlay-50G-10M-1.ext3:ro /global/scratch/users/nakamoto/singularity/cuda11.5-cudnn8-devel-ubuntu18.04.sif /bin/bash -c "
     source ~/.bashrc
+    conda activate odt
     cd $PROJECT_DIR
     python ../main.py \
     --seed=$1 \
