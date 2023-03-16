@@ -1,6 +1,6 @@
-export CUDA_VISIBLE_DEVICES=7
+# export CUDA_VISIBLE_DEVICES=7
 export D4RL_SUPPRESS_IMPORT_ERROR=1
-export WANDB_DISABLED=True
+# export WANDB_DISABLED=True
 
 #alan
 # dataset_path=/nfs/kun2/users/mitsuhiko/d4rl-pkl-dataset/data
