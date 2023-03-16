@@ -13,7 +13,7 @@
 
 TASK_ID=$((SLURM_ARRAY_TASK_ID-1))
 
-BETAS="1;2;3"
+BETAS="1;2;3;4;5"
 
 arrBETAS=(${BETAS//;/ })
 
@@ -48,7 +48,8 @@ singularity exec --nv --writable-tmpfs -B /usr/lib64 -B /var/lib/dcv-gl --overla
     --learning_rate=0.001 \
     --weight_decay=0 \
     --project=$PROJECT_NAME \
-    --dataset_path=$dataset_path
+    --dataset_path=$dataset_path \
+    --num_workers=4
 "
 }
 

@@ -271,6 +271,7 @@ class Experiment:
                 state_std=self.state_std,
                 reward_scale=self.reward_scale,
                 action_range=self.action_range,
+                num_workers=self.variant["num_workers"]
             )
 
             train_outputs = trainer.train_iteration(
@@ -364,6 +365,7 @@ class Experiment:
                 state_std=self.state_std,
                 reward_scale=self.reward_scale,
                 action_range=self.action_range,
+                num_workers=self.variant["num_workers"]
             )
 
             # finetuning
@@ -538,6 +540,7 @@ if __name__ == "__main__":
     parser.add_argument("--project", type=str, default="odt_project")
     parser.add_argument("--max_env_steps", type=int, default=1e6)
     parser.add_argument("--dataset_path", type=str, default="./data")
+    parser.add_argument("--num_workers", type=int, default=24)
 
 
 
