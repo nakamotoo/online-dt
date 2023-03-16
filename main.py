@@ -14,6 +14,7 @@ import gym
 import d4rl
 import torch
 import numpy as np
+import os
 
 import utils
 from replay_buffer import ReplayBuffer
@@ -37,7 +38,7 @@ class Experiment:
 
         self.state_dim, self.act_dim, self.action_range = self._get_env_spec(variant)
         self.offline_trajs, self.state_mean, self.state_std = self._load_dataset(
-            variant["env"]
+            variant["env"], variant["dataset_path"]
         )
         # initialize by offline trajs
         self.replay_buffer = ReplayBuffer(variant["replay_size"], self.offline_trajs)
@@ -150,9 +151,9 @@ class Experiment:
             torch.set_rng_state(checkpoint["pytorch"])
             print(f"Model loaded at {path_prefix}/model.pt")
 
-    def _load_dataset(self, env_name):
+    def _load_dataset(self, env_name, dataset_path):
 
-        dataset_path = f"/nfs/kun2/users/mitsuhiko/d4rl-pkl-dataset/data/{env_name}.pkl"
+        dataset_path = os.path.join(dataset_path, f"{env_name}.pkl")
         with open(dataset_path, "rb") as f:
             trajectories = pickle.load(f)
 
@@ -521,7 +522,7 @@ if __name__ == "__main__":
     parser.add_argument("--num_updates_per_pretrain_iter", type=int, default=5000)
 
     # finetuning options
-    parser.add_argument("--max_online_iters", type=int, default=1500)
+    parser.add_argument("--max_online_iters", type=int, default=30000)
     parser.add_argument("--online_rtg", type=int, default=7200)
     parser.add_argument("--num_online_rollouts", type=int, default=1)
     parser.add_argument("--replay_size", type=int, default=1000)
@@ -536,11 +537,13 @@ if __name__ == "__main__":
 
     parser.add_argument("--project", type=str, default="odt_project")
     parser.add_argument("--max_env_steps", type=int, default=1e6)
+    parser.add_argument("--dataset_path", type=str, default="./data")
+
 
 
     args = parser.parse_args()
     import warnings
-    warnings.filterwarnings("ignore", category=DeprecationWarning) 
+    warnings.filterwarnings("ignore") 
 
     utils.set_seed_everywhere(args.seed)
 
