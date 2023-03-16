@@ -531,7 +531,7 @@ if __name__ == "__main__":
 
     # environment options
     parser.add_argument("--device", type=str, default="cuda")
-    parser.add_argument("--log_to_tb", "-w", type=bool, default=True)
+    parser.add_argument("--log_to_tb", "-w", type=bool, default=False)
     parser.add_argument("--save_dir", type=str, default="./exp")
     parser.add_argument("--exp_name", type=str, default="default")
 
