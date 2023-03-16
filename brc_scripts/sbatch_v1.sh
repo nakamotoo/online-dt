@@ -21,8 +21,8 @@ BETA=${arrBETAS[$TASK_ID]}
 
 module load gnu-parallel
 
-export PROJECT_DIR="/global/home/users/$USER/online-dt"
-export LOG_DIR="/global/scratch/users/$USER/online-dt"
+export PROJECT_DIR=/global/home/users/$USER/online-dt
+export LOG_DIR=/global/scratch/users/$USER/online-dt
 export PROJECT_NAME="odt-antmaze"
 export dataset_path=/global/scratch/users/nakamoto/data
 
@@ -56,7 +56,8 @@ singularity exec --nv --writable-tmpfs -B /usr/lib64 -B /var/lib/dcv-gl --overla
     --project=$PROJECT_NAME \
     --dataset_path=$dataset_path \
     --num_workers=4 \
-    --env_type=dummy
+    --env_type=dummy \
+    --save_dir=$LOG_DIR/exp
 "
 }
 

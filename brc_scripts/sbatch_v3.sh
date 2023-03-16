@@ -55,7 +55,8 @@ singularity exec --nv --writable-tmpfs -B /usr/lib64 -B /var/lib/dcv-gl --overla
     --project=$PROJECT_NAME \
     --dataset_path=$dataset_path \
     --num_workers=4 \
-    --env_type=dummy
+    --env_type=dummy \
+    --save_dir=$LOG_DIR/exp
 
 "
 }
