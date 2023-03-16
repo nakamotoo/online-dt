@@ -8,6 +8,8 @@ LICENSE.md file in the root directory of this source tree.
 import numpy as np
 import torch
 import time
+from tqdm import tqdm
+
 
 
 class SequenceTrainer:
@@ -37,7 +39,7 @@ class SequenceTrainer:
         train_start = time.time()
 
         self.model.train()
-        for _, trajs in enumerate(dataloader):
+        for _, trajs in enumerate(tqdm(dataloader)):
             loss, nll, entropy = self.train_step_stochastic(loss_fn, trajs)
             losses.append(loss)
             nlls.append(nll)

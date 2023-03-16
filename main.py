@@ -25,6 +25,9 @@ from decision_transformer.models.decision_transformer import DecisionTransformer
 from evaluation import create_vec_eval_episodes_fn, vec_evaluate_episode_rtg
 from trainer import SequenceTrainer
 from logger import Logger
+from utils import WandBLogger, get_user_flags
+from ml_collections import ConfigDict
+
 
 MAX_EPISODE_LEN = 1000
 
@@ -89,6 +92,11 @@ class Experiment:
         self.reward_scale = 1.0 if "antmaze" in variant["env"] else 0.001
         self.logger = Logger(variant)
 
+        logging_cfg = ConfigDict()
+        logging_cfg.project=variant["project"]
+        self.wandb_logger=WandBLogger(config=logging_cfg, variant=variant)
+
+
     def _get_env_spec(self, variant):
         env = gym.make(variant["env"])
         state_dim = env.observation_space.shape[0]
@@ -144,7 +152,7 @@ class Experiment:
 
     def _load_dataset(self, env_name):
 
-        dataset_path = f"./data/{env_name}.pkl"
+        dataset_path = f"/nfs/kun2/users/mitsuhiko/d4rl-pkl-dataset/data/{env_name}.pkl"
         with open(dataset_path, "rb") as f:
             trajectories = pickle.load(f)
 
@@ -234,6 +242,7 @@ class Experiment:
                 device=self.device,
                 use_mean=True,
                 reward_scale=self.reward_scale,
+                env_name=self.variant["env"]
             )
         ]
 
@@ -271,6 +280,7 @@ class Experiment:
             outputs = {"time/total": time.time() - self.start_time}
             outputs.update(train_outputs)
             outputs.update(eval_outputs)
+            print(eval_outputs)
             self.logger.log_metrics(
                 outputs,
                 iter_num=self.pretrain_iter,
@@ -284,6 +294,13 @@ class Experiment:
             )
 
             self.pretrain_iter += 1
+        
+        # log final offline pre-trained performance
+        self.wandb_logger.log(train_outputs, step=0)
+        self.wandb_logger.log(eval_outputs, step=0)
+        self.wandb_logger.log({'env_steps': self.total_transitions_sampled}, step=0)
+
+
 
     def evaluate(self, eval_fns):
         eval_start = time.time()
@@ -319,6 +336,7 @@ class Experiment:
                 device=self.device,
                 use_mean=True,
                 reward_scale=self.reward_scale,
+                env_name=self.variant["env"]
             )
         ]
         writer = (
@@ -349,9 +367,7 @@ class Experiment:
 
             # finetuning
             is_last_iter = self.online_iter == self.variant["max_online_iters"] - 1
-            if (self.online_iter + 1) % self.variant[
-                "eval_interval"
-            ] == 0 or is_last_iter:
+            if (self.online_iter + 1) % self.variant["eval_interval"] == 0 or is_last_iter or self.total_transitions_sampled >= self.variant["max_env_steps"]:
                 evaluation = True
             else:
                 evaluation = False
@@ -368,6 +384,8 @@ class Experiment:
 
             outputs["time/total"] = time.time() - self.start_time
 
+            self.online_iter += 1
+
             # log the metrics
             self.logger.log_metrics(
                 outputs,
@@ -376,12 +394,20 @@ class Experiment:
                 writer=writer,
             )
 
+            self.wandb_logger.log(outputs, step=self.online_iter)
+            self.wandb_logger.log({'env_steps': self.total_transitions_sampled}, step=self.online_iter)
+
+            if evaluation:
+                self.wandb_logger.log(eval_outputs, step=self.online_iter)
+            
             self._save_model(
                 path_prefix=self.logger.log_path,
                 is_pretrain_model=False,
             )
 
-            self.online_iter += 1
+            if is_last_iter:
+                break
+
 
     def __call__(self):
 
@@ -500,7 +526,7 @@ if __name__ == "__main__":
     parser.add_argument("--num_online_rollouts", type=int, default=1)
     parser.add_argument("--replay_size", type=int, default=1000)
     parser.add_argument("--num_updates_per_online_iter", type=int, default=300)
-    parser.add_argument("--eval_interval", type=int, default=10)
+    parser.add_argument("--eval_interval", type=int, default=5)
 
     # environment options
     parser.add_argument("--device", type=str, default="cuda")
@@ -508,9 +534,16 @@ if __name__ == "__main__":
     parser.add_argument("--save_dir", type=str, default="./exp")
     parser.add_argument("--exp_name", type=str, default="default")
 
+    parser.add_argument("--project", type=str, default="odt_project")
+    parser.add_argument("--max_env_steps", type=int, default=1e6)
+
+
     args = parser.parse_args()
+    import warnings
+    warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
     utils.set_seed_everywhere(args.seed)
+
     experiment = Experiment(vars(args))
 
     print("=" * 50)

@@ -141,3 +141,5 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+exp/
+wandb_config.py

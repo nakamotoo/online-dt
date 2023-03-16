@@ -7,9 +7,16 @@ LICENSE.md file in the root directory of this source tree.
 
 import numpy as np
 import torch
+from functools import partial
+import d4rl
+
 
 MAX_EPISODE_LEN = 1000
 
+def get_normalized_score(env_name, score):
+    ref_min_score = d4rl.infos.REF_MIN_SCORE[env_name]
+    ref_max_score = d4rl.infos.REF_MAX_SCORE[env_name]
+    return (score - ref_min_score) / (ref_max_score - ref_min_score)
 
 def create_vec_eval_episodes_fn(
     vec_env,
@@ -19,10 +26,11 @@ def create_vec_eval_episodes_fn(
     state_mean,
     state_std,
     device,
+    env_name,
     use_mean=False,
     reward_scale=0.001,
 ):
-    def eval_episodes_fn(model):
+    def eval_episodes_fn(model, env_name):
         target_return = [eval_rtg * reward_scale] * vec_env.num_envs
         returns, lengths, _ = vec_evaluate_episode_rtg(
             vec_env,
@@ -38,15 +46,17 @@ def create_vec_eval_episodes_fn(
             device=device,
             use_mean=use_mean,
         )
+        average_normalized_return=np.mean([d4rl.get_normalized_score(env_name, ret) for ret in returns])
         suffix = "_gm" if use_mean else ""
         return {
             f"evaluation/return_mean{suffix}": np.mean(returns),
             f"evaluation/return_std{suffix}": np.std(returns),
             f"evaluation/length_mean{suffix}": np.mean(lengths),
             f"evaluation/length_std{suffix}": np.std(lengths),
+            f"evaluation/average_normalized_return": average_normalized_return,
         }
 
-    return eval_episodes_fn
+    return partial(eval_episodes_fn, env_name=env_name)
 
 
 @torch.no_grad()
@@ -193,7 +203,7 @@ def vec_evaluate_episode_rtg(
             "terminals": terminals,
         }
         trajectories.append(traj)
-
+    
     return (
         episode_return.reshape(num_envs),
         episode_length.reshape(num_envs),
