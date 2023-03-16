@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=odt-antmaze-mp
+#SBATCH --job-name=odt-mp
 #SBATCH --open-mode=append
 #SBATCH --output=logs/out/%x_%j.txt
 #SBATCH --error=logs/err/%x_%j.txt
@@ -32,7 +32,7 @@ singularity exec --nv --writable-tmpfs -B /usr/lib64 -B /var/lib/dcv-gl --overla
     source ~/.bashrc
     conda activate odt
     cd $PROJECT_DIR
-    python ../main.py \
+    python main.py \
     --seed=$1 \
     --num_updates_per_pretrain_iter=7000 \
     --max_env_steps=1000000 \
