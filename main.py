@@ -19,7 +19,7 @@ import os
 import utils
 from replay_buffer import ReplayBuffer
 from lamb import Lamb
-from stable_baselines3.common.vec_env import SubprocVecEnv
+from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
 from pathlib import Path
 from data import create_dataloader
 from decision_transformer.models.decision_transformer import DecisionTransformer
@@ -467,12 +467,23 @@ class Experiment:
             print(f"Generated the fixed target goal: {target_goal}")
         else:
             target_goal = None
-        eval_envs = SubprocVecEnv(
-            [
-                get_env_builder(i, env_name=env_name, target_goal=target_goal)
-                for i in range(self.variant["num_eval_episodes"])
-            ]
-        )
+
+        if self.variant["env_type"] == "vec":
+            eval_envs = SubprocVecEnv(
+                [
+                    get_env_builder(i, env_name=env_name, target_goal=target_goal)
+                    for i in range(self.variant["num_eval_episodes"])
+                ]
+            )
+        elif self.variant["env_type"] == "dummy":
+            eval_envs = DummyVecEnv(
+                [
+                    get_env_builder(i, env_name=env_name, target_goal=target_goal)
+                    for i in range(self.variant["num_eval_episodes"])
+                ]
+            )
+        else:
+            raise NotImplementedError
 
         self.start_time = time.time()
         if self.variant["max_pretrain_iters"]:
@@ -480,12 +491,22 @@ class Experiment:
 
         if self.variant["max_online_iters"]:
             print("\n\nMaking Online Env.....")
-            online_envs = SubprocVecEnv(
-                [
-                    get_env_builder(i + 100, env_name=env_name, target_goal=target_goal)
-                    for i in range(self.variant["num_online_rollouts"])
-                ]
-            )
+            if self.variant["env_type"] == "vec":
+                online_envs = SubprocVecEnv(
+                    [
+                        get_env_builder(i + 100, env_name=env_name, target_goal=target_goal)
+                        for i in range(self.variant["num_online_rollouts"])
+                    ]
+                )
+            elif self.variant["env_type"] == "dummy":
+                online_envs = DummyVecEnv(
+                    [
+                        get_env_builder(i + 100, env_name=env_name, target_goal=target_goal)
+                        for i in range(self.variant["num_online_rollouts"])
+                    ]
+                )
+            else:
+                raise NotImplementedError
             self.online_tuning(online_envs, eval_envs, loss_fn)
             online_envs.close()
 
@@ -541,6 +562,8 @@ if __name__ == "__main__":
     parser.add_argument("--max_env_steps", type=int, default=1e6)
     parser.add_argument("--dataset_path", type=str, default="./data")
     parser.add_argument("--num_workers", type=int, default=24)
+    parser.add_argument("--env_type", type=str, default="vec")
+
 
 
 

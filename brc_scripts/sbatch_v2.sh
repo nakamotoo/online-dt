@@ -26,6 +26,11 @@ export LOG_DIR="/global/scratch/users/$USER/online-dt"
 export PROJECT_NAME="odt-antmaze"
 export dataset_path=/global/scratch/users/nakamoto/data
 
+    # if [[ $HOSTNAME == n02* ]]; then
+    #     conda activate odt-2
+    # else
+    #     conda activate odt
+    # fi
 run_singularity ()
 {
 singularity exec --userns --nv -B /usr/lib64 -B /var/lib/dcv-gl --overlay /global/scratch/users/nakamoto/singularity/50G.img:ro /global/scratch/users/nakamoto/singularity/cuda11.5-cudnn8-devel-ubuntu18.04.sif /bin/bash -c "
@@ -39,7 +44,7 @@ singularity exec --userns --nv -B /usr/lib64 -B /var/lib/dcv-gl --overlay /globa
     --env=$2 \
     --embed_dim=1024 \
     --eval_interval=10 \
-    --num_eval_episodes=50 \
+    --num_eval_episodes=20 \
     --eval_context_length=5 \
     --ordering=1 \
     --eval_rtg=1 \
@@ -49,7 +54,10 @@ singularity exec --userns --nv -B /usr/lib64 -B /var/lib/dcv-gl --overlay /globa
     --weight_decay=0 \
     --project=$PROJECT_NAME \
     --dataset_path=$dataset_path \
-    --num_workers=4
+    --num_workers=4 \
+    --env_type=dummy \
+    --save_dir=$LOG_DIR/exp
+
 "
 }
 
