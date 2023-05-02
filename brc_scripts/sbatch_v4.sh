@@ -13,7 +13,7 @@
 
 TASK_ID=$((SLURM_ARRAY_TASK_ID-1))
 
-BETAS="1;2;3;4;5"
+BETAS="4;5"
 
 arrBETAS=(${BETAS//;/ })
 
@@ -28,7 +28,7 @@ export dataset_path=/global/scratch/users/nakamoto/data
 
 run_singularity ()
 {
-singularity exec --nv --writable-tmpfs -B /usr/lib64 -B /var/lib/dcv-gl --overlay /global/scratch/users/nakamoto/singularity/overlay-50G-10M-2.ext3:ro /global/scratch/users/nakamoto/singularity/cuda11.5-cudnn8-devel-ubuntu18.04.sif /bin/bash -c "
+singularity exec --userns --nv -B /usr/lib64 -B /var/lib/dcv-gl --overlay /global/scratch/users/nakamoto/singularity/50G.img:ro /global/scratch/users/nakamoto/singularity/cuda11.5-cudnn8-devel-ubuntu18.04.sif /bin/bash -c "
     source ~/.bashrc
     conda activate odt
     cd $PROJECT_DIR

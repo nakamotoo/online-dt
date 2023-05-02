@@ -19,4 +19,4 @@ mkdir logs/err/ -p
 
 # let NUM_JOBS=$NUM_ENVS*$NUM_AS
 
-sbatch --array=1-3%3 sbatch_v3.sh
+sbatch --array=1-1%1 sbatch_v3.sh
